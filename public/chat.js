@@ -9,6 +9,8 @@ const chatMessages = document.getElementById("chat-messages");
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
 const typingIndicator = document.getElementById("typing-indicator");
+const imageInput = document.getElementById("image-input");
+const chatForm = document.getElementById("chat-form");
 
 // Chat state
 let chatHistory = [
@@ -26,6 +28,7 @@ userInput.addEventListener("input", function () {
   this.style.height = this.scrollHeight + "px";
 });
 
+
 // Send message on Enter (without Shift)
 userInput.addEventListener("keydown", function (e) {
   if (e.key === "Enter" && !e.shiftKey) {
@@ -34,29 +37,39 @@ userInput.addEventListener("keydown", function (e) {
   }
 });
 
-// Send button click handler
-sendButton.addEventListener("click", sendMessage);
+// Form submit handler (supports send button and Enter)
+chatForm.addEventListener("submit", function (e) {
+  e.preventDefault();
+  sendMessage();
+});
 
 /**
  * Sends a message to the chat API and processes the response
  */
 async function sendMessage() {
   const message = userInput.value.trim();
+  const imageFile = imageInput.files[0];
 
-  // Don't send empty messages
-  if (message === "" || isProcessing) return;
+  // Don't send empty messages and no image
+  if ((message === "" && !imageFile) || isProcessing) return;
 
   // Disable input while processing
   isProcessing = true;
   userInput.disabled = true;
   sendButton.disabled = true;
+  imageInput.disabled = true;
 
   // Add user message to chat
-  addMessageToChat("user", message);
+  let userMsgContent = message;
+  if (imageFile) {
+    userMsgContent += userMsgContent ? "\n[Image attached]" : "[Image attached]";
+  }
+  addMessageToChat("user", userMsgContent);
 
   // Clear input
   userInput.value = "";
   userInput.style.height = "auto";
+  imageInput.value = "";
 
   // Show typing indicator
   typingIndicator.classList.add("visible");
@@ -74,16 +87,29 @@ async function sendMessage() {
     // Scroll to bottom
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
-    // Send request to API
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messages: chatHistory,
-      }),
-    });
+    // Prepare request
+    let response;
+    if (imageFile) {
+      // Use FormData for image upload
+      const formData = new FormData();
+      formData.append("messages", new Blob([JSON.stringify(chatHistory)], { type: "application/json" }));
+      formData.append("image", imageFile);
+      response = await fetch("/api/chat", {
+        method: "POST",
+        body: formData,
+      });
+    } else {
+      // Fallback to JSON
+      response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: chatHistory,
+        }),
+      });
+    }
 
     // Handle errors
     if (!response.ok) {
@@ -119,7 +145,8 @@ async function sendMessage() {
             chatMessages.scrollTop = chatMessages.scrollHeight;
           }
         } catch (e) {
-          console.error("Error parsing JSON:", e);
+          // Log parse errors for debugging, but continue for incomplete lines
+          console.warn("JSON parse error in SSE chunk:", e, "Line:", line);
         }
       }
     }
@@ -140,6 +167,7 @@ async function sendMessage() {
     isProcessing = false;
     userInput.disabled = false;
     sendButton.disabled = false;
+    imageInput.disabled = false;
     userInput.focus();
   }
 }

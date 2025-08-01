@@ -156,15 +156,16 @@
         AI is thinking...
       </div>
 
-      <div class="message-input">
+      <form class="message-input" id="chat-form" enctype="multipart/form-data">
+        <input type="file" id="image-input" accept="image/*" style="margin-right:0.5rem;max-width:160px;" />
         <textarea
           id="user-input"
           placeholder="Type your message here..."
           rows="1"
           autofocus
         ></textarea>
-        <button id="send-button">Send</button>
-      </div>
+        <button id="send-button" type="submit">Send</button>
+      </form>
     </div>
 
     <footer>
