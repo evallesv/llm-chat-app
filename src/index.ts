@@ -116,20 +116,25 @@ async function handleChatRequest(
       messages.unshift({ role: "system", content: SYSTEM_PROMPT });
     }
 
-    // If there's an image, add it as a user message
+    let aiInput: any;
     if (imageBase64) {
-      messages.push({
-        role: "user",
-        content: `Attached invoice image (base64): ${imageBase64}`,
-      });
+      // Si hay imagen, enviar el objeto con la propiedad 'image' (string binario base64)
+      aiInput = {
+        image: imageBase64,
+        max_tokens: 5000,
+        prompt: SYSTEM_PROMPT,
+      };
+    } else {
+      // Si no hay imagen, enviar el prompt como string
+      aiInput = {
+        prompt: messages.map((m) => m.content).join("\n"),
+        max_tokens: 5000,
+      };
     }
 
     const response = await env.AI.run(
       MODEL_ID,
-      {
-        messages,
-        max_tokens: 1024,
-      },
+      aiInput,
       {
         returnRawResponse: true,
         // Uncomment to use AI Gateway
