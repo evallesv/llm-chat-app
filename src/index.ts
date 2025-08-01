@@ -17,7 +17,7 @@ const MODEL_ID = "@cf/unum/uform-gen2-qwen-500m";
 const SYSTEM_PROMPT =
   `
 You are an expert invoice data extraction tool. Analyze the provided invoice image and extract the following information in a structured JSON format.
-The JSON object should strictly follow this structure:
+The JSON object should strictly follow this structure with image content:
 {
   "vendorName": "string or null",
   "client": "string or null, the name of the client or customer purchasing goods/services",
