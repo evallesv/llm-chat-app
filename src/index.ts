@@ -89,7 +89,7 @@ async function handleChatRequest(
 ): Promise<Response> {
   try {
     let messages: ChatMessage[] = [];
-    let imageBase64: string | null = null;
+    let imageBase64: Uint8Array | null = null;
 
     const contentType = request.headers.get("content-type") || "";
     if (contentType.includes("multipart/form-data")) {
@@ -103,7 +103,7 @@ async function handleChatRequest(
       const imageFile = formData.get("image");
       if (imageFile) {
         const arrayBuffer = await (imageFile as Blob).arrayBuffer();
-        imageBase64 = Buffer.from(arrayBuffer).toString("base64");
+        imageBase64 = new Uint8Array(arrayBuffer);
       }
     } else {
       // Parse JSON request body
@@ -118,7 +118,7 @@ async function handleChatRequest(
 
     let aiInput: any;
     if (imageBase64) {
-      // Si hay imagen, enviar el objeto con la propiedad 'image' y el system prompt
+      // Si hay imagen, enviar el objeto con la propiedad 'image' (Uint8Array) y el system prompt
       aiInput = {
         image: imageBase64,
         prompt: SYSTEM_PROMPT,
