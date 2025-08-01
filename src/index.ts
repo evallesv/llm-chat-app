@@ -118,9 +118,9 @@ async function handleChatRequest(
 
     let aiInput: any;
     if (imageBase64) {
-      // Si hay imagen, enviar el objeto con la propiedad 'image' (Uint8Array) y el system prompt
+      // Si hay imagen, enviar el objeto con la propiedad 'image' (number[]) y el system prompt
       aiInput = {
-        image: imageBase64,
+        image: Array.from(imageBase64),
         prompt: SYSTEM_PROMPT,
         max_tokens: 5000,
       };
